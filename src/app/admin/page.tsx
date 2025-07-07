@@ -116,22 +116,43 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        {/* Admin Management Link */}
+        {/* Admin Management Links */}
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Admin Management</h3>
-                <a
-                  href="/admin-management"
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Manage Users
-                </a>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Admin Management */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Admin Management</h3>
+                  <a
+                    href="/admin-management"
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Manage Users
+                  </a>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  View and manage all admin users in the system
+                </p>
               </div>
-              <p className="text-sm text-gray-600 mb-4">
-                View and manage all admin users in the system
-              </p>
+            </div>
+
+            {/* Admin Seeder */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Admin Seeder</h3>
+                  <a
+                    href="/admin-seeder"
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    Create Admins
+                  </a>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Create admin users with default or custom credentials
+                </p>
+              </div>
             </div>
           </div>
         </div>
