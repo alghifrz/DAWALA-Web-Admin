@@ -4,9 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
-import { Button } from '../ui/Button';
 import { KulinerFormData } from '@/lib/types/admin';
 import { STATUS_KULINER } from '@/lib/utils/constants';
 import { getJenisList, getLokasiList } from '@/lib/api/kuliner';
@@ -104,51 +101,111 @@ export function KulinerForm({ initialData, onSubmit, loading = false }: KulinerF
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label="Nama Kuliner"
-          {...register('nama')}
-          error={errors.nama?.message}
-          placeholder="Masukkan nama kuliner"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nama Kuliner
+          </label>
+          <input
+            type="text"
+            {...register('nama')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Masukkan nama kuliner"
+          />
+          {errors.nama && (
+            <p className="mt-1 text-sm text-red-600">{errors.nama.message}</p>
+          )}
+        </div>
 
-        <Select
-          label="Status Halal"
-          options={STATUS_KULINER}
-          {...register('status')}
-          error={errors.status?.message}
-          placeholder="Pilih status halal"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Status Halal
+          </label>
+          <select
+            {...register('status')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Pilih status halal</option>
+            {STATUS_KULINER.map((status) => (
+              <option key={status.value} value={status.value}>
+                {status.label}
+              </option>
+            ))}
+          </select>
+          {errors.status && (
+            <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
+          )}
+        </div>
 
-        <Input
-          label="Jam Buka"
-          {...register('jam_buka')}
-          error={errors.jam_buka?.message}
-          placeholder="Contoh: 08:00 - 22:00"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Jam Buka
+          </label>
+          <input
+            type="text"
+            {...register('jam_buka')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Contoh: 08:00 - 22:00"
+          />
+          {errors.jam_buka && (
+            <p className="mt-1 text-sm text-red-600">{errors.jam_buka.message}</p>
+          )}
+        </div>
 
-        <Input
-          label="URL Foto"
-          {...register('foto')}
-          error={errors.foto?.message}
-          placeholder="https://example.com/foto.jpg"
-          helperText="Masukkan URL gambar kuliner"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            URL Foto
+          </label>
+          <input
+            type="url"
+            {...register('foto')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://example.com/foto.jpg"
+          />
+          <p className="mt-1 text-xs text-gray-500">Masukkan URL gambar kuliner</p>
+          {errors.foto && (
+            <p className="mt-1 text-sm text-red-600">{errors.foto.message}</p>
+          )}
+        </div>
 
-        <Select
-          label="Jenis Kuliner"
-          options={jenisOptions}
-          {...register('id_jenis')}
-          error={errors.id_jenis?.message}
-          placeholder="Pilih jenis kuliner"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Jenis Kuliner
+          </label>
+          <select
+            {...register('id_jenis')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Pilih jenis kuliner</option>
+            {jenisOptions.map((jenis) => (
+              <option key={jenis.value} value={jenis.value}>
+                {jenis.label}
+              </option>
+            ))}
+          </select>
+          {errors.id_jenis && (
+            <p className="mt-1 text-sm text-red-600">{errors.id_jenis.message}</p>
+          )}
+        </div>
 
-        <Select
-          label="Lokasi"
-          options={lokasiOptions}
-          {...register('id_alamat')}
-          error={errors.id_alamat?.message}
-          placeholder="Pilih lokasi"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Lokasi
+          </label>
+          <select
+            {...register('id_alamat')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Pilih lokasi</option>
+            {lokasiOptions.map((lokasi) => (
+              <option key={lokasi.value} value={lokasi.value}>
+                {lokasi.label}
+              </option>
+            ))}
+          </select>
+          {errors.id_alamat && (
+            <p className="mt-1 text-sm text-red-600">{errors.id_alamat.message}</p>
+          )}
+        </div>
       </div>
 
       <div>
@@ -167,16 +224,27 @@ export function KulinerForm({ initialData, onSubmit, loading = false }: KulinerF
       </div>
 
       <div className="flex justify-end space-x-4">
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={() => window.history.back()}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Batal
-        </Button>
-        <Button type="submit" loading={loading}>
-          {initialData ? 'Update Kuliner' : 'Tambah Kuliner'}
-        </Button>
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Loading...
+            </div>
+          ) : (
+            initialData ? 'Update Kuliner' : 'Tambah Kuliner'
+          )}
+        </button>
       </div>
     </form>
   );

@@ -1,11 +1,19 @@
 import React from 'react';
-import { AdminLayout } from '@/components/admin/layout/AdminLayout';
+import { AdminLayout } from '@/components/AdminLayout';
 import { TempatIbadahTable } from '@/components/admin/tables/TempatIbadahTable';
 
-export default function TempatIbadahPage() {
+interface TempatIbadahPageProps {
+  searchParams?: {
+    page?: string;
+    limit?: string;
+    search?: string;
+  };
+}
+
+export default async function TempatIbadahPage({ searchParams }: TempatIbadahPageProps) {
   return (
     <AdminLayout>
-      <TempatIbadahTable />
+      <TempatIbadahTable searchParams={searchParams} />
     </AdminLayout>
   );
 } 

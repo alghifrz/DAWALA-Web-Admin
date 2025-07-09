@@ -38,13 +38,14 @@ export async function middleware(request: NextRequest) {
 
   const isLoginPage = request.nextUrl.pathname === '/login'
   const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
+  const isDashboardPage = request.nextUrl.pathname === '/dashboard'
 
-  if (!user && isAdminPage) {
+  if (!user && (isAdminPage || isDashboardPage)) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if (user && isLoginPage) {
-    return NextResponse.redirect(new URL('/admin', request.url))
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
   return supabaseResponse

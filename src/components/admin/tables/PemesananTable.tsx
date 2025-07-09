@@ -6,9 +6,9 @@ import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { DeleteButton } from '@/components/DeleteButton';
 import { prisma } from '@/lib/prisma';
-import { formatDate, truncateText } from '@/lib/utils/helpers';
+import { formatDate } from '@/lib/utils/helpers';
 
-interface KulinerTableProps {
+interface PemesananTableProps {
   searchParams?: {
     page?: string;
     limit?: string;
@@ -17,7 +17,7 @@ interface KulinerTableProps {
   };
 }
 
-export async function KulinerTable({ searchParams }: KulinerTableProps) {
+export async function PemesananTable({ searchParams }: PemesananTableProps) {
   const page = parseInt(searchParams?.page || '1');
   const limit = parseInt(searchParams?.limit || '10');
   const search = searchParams?.search || '';
@@ -29,42 +29,68 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
   const where: any = {};
   if (search) {
     where.OR = [
-      { nama: { contains: search, mode: 'insensitive' } },
-      { deskripsi: { contains: search, mode: 'insensitive' } },
+      { paket_wisata: { nama_paket: { contains: search, mode: 'insensitive' } } },
+      { catatan_opsional: { contains: search, mode: 'insensitive' } },
     ];
   }
   if (status) {
-    where.status = status;
+    where.status_pemesanan = status;
   }
 
   // Get data from Prisma
-  const [kulinerList, totalItems] = await Promise.all([
-    prisma.kuliner.findMany({
+  const [pemesananList, totalItems] = await Promise.all([
+    prisma.pemesanan.findMany({
       where,
       skip,
       take: limit,
       orderBy: { created_at: 'desc' },
       include: {
-        alamat: true,
+        paket_wisata: true,
       },
     }).catch(() => []),
-    prisma.kuliner.count({ where }).catch(() => 0),
+    prisma.pemesanan.count({ where }).catch(() => 0),
   ]);
 
   const totalPages = Math.ceil(totalItems / limit);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'cancelled':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'Dikonfirmasi';
+      case 'pending':
+        return 'Menunggu';
+      case 'cancelled':
+        return 'Dibatalkan';
+      default:
+        return status;
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Kuliner Halal</h2>
-          <p className="text-gray-600">Kelola data kuliner halal di Desa Wisata Alamendah</p>
+          <h2 className="text-2xl font-bold text-gray-900">Pemesanan</h2>
+          <p className="text-gray-600">Kelola data pemesanan paket wisata di Desa Wisata Alamendah</p>
         </div>
-        <Link href="/admin/kuliner/create">
+        <Link href="/admin/pemesanan/create">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Tambah Kuliner
+            Tambah Pemesanan
           </Button>
         </Link>
       </div>
@@ -76,7 +102,7 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               name="search"
-              placeholder="Cari kuliner..."
+              placeholder="Cari pemesanan..."
               defaultValue={search}
               className="pl-10"
             />
@@ -87,8 +113,9 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
             defaultValue={status}
           >
             <option value="">Semua Status</option>
-            <option value="halal">Halal</option>
-            <option value="haram">Haram</option>
+            <option value="pending">Menunggu</option>
+            <option value="confirmed">Dikonfirmasi</option>
+            <option value="cancelled">Dibatalkan</option>
           </select>
           <select
             name="limit"
@@ -112,16 +139,19 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nama
+                  Paket Wisata
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  User ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tanggal Pemesanan
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Jam Buka
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Lokasi
+                  Catatan
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Dibuat
@@ -132,44 +162,42 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {kulinerList.map((kuliner) => (
-                <tr key={kuliner.id_kuliner} className="hover:bg-gray-50">
+              {pemesananList.map((pemesanan) => (
+                <tr key={pemesanan.id_pemesanan} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {kuliner.nama}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {truncateText(kuliner.deskripsi || '', 50)}
-                      </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {pemesanan.paket_wisata?.nama_paket || 'N/A'}
                     </div>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {pemesanan.user_id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatDate(pemesanan.tanggal_pemesanan)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge
-                      variant={kuliner.status === 'halal' ? 'success' : 'error'}
-                    >
-                      {kuliner.status === 'halal' ? 'Halal' : 'Haram'}
+                    <Badge variant={getStatusColor(pemesanan.status_pemesanan)}>
+                      {getStatusLabel(pemesanan.status_pemesanan)}
                     </Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {kuliner.jam_buka}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {kuliner.alamat?.nama || 'N/A'}
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="max-w-xs truncate">
+                      {pemesanan.catatan_opsional || '-'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(kuliner.created_at)}
+                    {formatDate(pemesanan.created_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
-                      <Link href={`/admin/kuliner/${kuliner.id_kuliner}`}>
+                      <Link href={`/admin/pemesanan/${pemesanan.id_pemesanan}`}>
                         <Button variant="ghost" size="sm">
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
                       <DeleteButton 
-                        action={`/admin/api/kuliner/${kuliner.id_kuliner}/delete`}
-                        confirmMessage="Apakah Anda yakin ingin menghapus kuliner ini?"
+                        action={`/admin/api/pemesanan/${pemesanan.id_pemesanan}/delete`}
+                        confirmMessage="Apakah Anda yakin ingin menghapus pemesanan ini?"
                       />
                     </div>
                   </td>
@@ -180,18 +208,18 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
         </div>
 
         {/* Empty state */}
-        {kulinerList.length === 0 && (
+        {pemesananList.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="h-12 w-12 mx-auto" />
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Tidak ada data kuliner
+              Tidak ada data pemesanan
             </h3>
             <p className="text-gray-500">
               {search || status
                 ? 'Coba ubah filter pencarian Anda'
-                : 'Mulai dengan menambahkan kuliner pertama'}
+                : 'Mulai dengan menambahkan pemesanan pertama'}
             </p>
           </div>
         )}
@@ -208,7 +236,7 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
           </div>
           <div className="flex space-x-2">
             {page > 1 && (
-              <Link href={`/admin/kuliner?page=${page - 1}&limit=${limit}&search=${search}&status=${status}`}>
+              <Link href={`/admin/pemesanan?page=${page - 1}&limit=${limit}&search=${search}&status=${status}`}>
                 <Button variant="outline" size="sm">
                   Sebelumnya
                 </Button>
@@ -218,7 +246,7 @@ export async function KulinerTable({ searchParams }: KulinerTableProps) {
               Halaman {page} dari {totalPages}
             </span>
             {page < totalPages && (
-              <Link href={`/admin/kuliner?page=${page + 1}&limit=${limit}&search=${search}&status=${status}`}>
+              <Link href={`/admin/pemesanan?page=${page + 1}&limit=${limit}&search=${search}&status=${status}`}>
                 <Button variant="outline" size="sm">
                   Selanjutnya
                 </Button>

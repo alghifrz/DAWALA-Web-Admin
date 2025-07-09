@@ -1,98 +1,51 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
-import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
-import { Button } from '../ui/Button';
-import { TempatIbadah } from '@/lib/types/admin';
-import { getTempatIbadahList, deleteTempatIbadah } from '@/lib/api/tempat-ibadah';
-import { formatDate, truncateText } from '@/lib/utils/helpers';
-import { TABLE_PAGE_SIZES, DEFAULT_PAGE_SIZE } from '@/lib/utils/constants';
+import { Input } from '@/components/Input';
+import { Button } from '@/components/Button';
+import { DeleteButton } from '@/components/DeleteButton';
+import { prisma } from '@/lib/prisma';
+import { formatDate } from '@/lib/utils/helpers';
 
 interface TempatIbadahTableProps {
-  onEdit?: (tempatIbadah: TempatIbadah) => void;
-  onDelete?: (id: string) => void;
+  searchParams?: {
+    page?: string;
+    limit?: string;
+    search?: string;
+  };
 }
 
-export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) {
-  const [tempatIbadahList, setTempatIbadahList] = useState<TempatIbadah[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps) {
+  const page = parseInt(searchParams?.page || '1');
+  const limit = parseInt(searchParams?.limit || '10');
+  const search = searchParams?.search || '';
+  
+  const skip = (page - 1) * limit;
 
-  const loadTempatIbadahList = async () => {
-    try {
-      setLoading(true);
-      const response = await getTempatIbadahList({
-        page: currentPage,
-        limit: pageSize,
-        search: searchTerm || undefined,
-      });
-      
-      setTempatIbadahList(response.data);
-      setTotalItems(response.total);
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Error loading tempat ibadah list:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadTempatIbadahList();
-  }, [currentPage, pageSize, searchTerm]);
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus tempat ibadah ini?')) {
-      return;
-    }
-
-    try {
-      setDeletingId(id);
-      await deleteTempatIbadah(id);
-      await loadTempatIbadahList();
-      if (onDelete) {
-        onDelete(id);
-      }
-    } catch (error) {
-      console.error('Error deleting tempat ibadah:', error);
-      alert('Gagal menghapus tempat ibadah');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Memuat data...</p>
-        </div>
-      </div>
-    );
+  // Build where clause for filtering
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { nama: { contains: search, mode: 'insensitive' } },
+      { deskripsi: { contains: search, mode: 'insensitive' } },
+    ];
   }
+
+  // Get data from Prisma
+  const [tempatIbadahList, totalItems] = await Promise.all([
+    prisma.tempat_Ibadah.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { created_at: 'desc' },
+      include: {
+        alamat: true,
+      },
+    }).catch(() => []),
+    prisma.tempat_Ibadah.count({ where }).catch(() => 0),
+  ]);
+
+  const totalPages = Math.ceil(totalItems / limit);
 
   return (
     <div className="space-y-6">
@@ -112,26 +65,29 @@ export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) 
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg border">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
+              name="search"
               placeholder="Cari tempat ibadah..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
+              defaultValue={search}
               className="pl-10"
             />
           </div>
-          <Select
-            placeholder="Jumlah per halaman"
-            options={TABLE_PAGE_SIZES.map(size => ({
-              value: size.toString(),
-              label: `${size} item`
-            }))}
-            value={pageSize.toString()}
-            onChange={(value) => handlePageSizeChange(parseInt(value))}
-          />
-        </div>
+          <select
+            name="limit"
+            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            defaultValue={limit.toString()}
+          >
+            <option value="10">10 item</option>
+            <option value="25">25 item</option>
+            <option value="50">50 item</option>
+          </select>
+          <Button type="submit" className="md:col-span-2">
+            Filter
+          </Button>
+        </form>
       </div>
 
       {/* Table */}
@@ -173,7 +129,7 @@ export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) 
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex flex-wrap gap-1">
-                      {tempatIbadah.fasilitas.slice(0, 3).map((fasilitas, index) => (
+                      {(tempatIbadah.fasilitas as string[] || []).slice(0, 3).map((fasilitas, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -181,9 +137,9 @@ export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) 
                           {fasilitas}
                         </span>
                       ))}
-                      {tempatIbadah.fasilitas.length > 3 && (
+                      {(tempatIbadah.fasilitas as string[] || []).length > 3 && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{tempatIbadah.fasilitas.length - 3}
+                          +{(tempatIbadah.fasilitas as string[] || []).length - 3}
                         </span>
                       )}
                     </div>
@@ -201,15 +157,10 @@ export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) 
                           <Edit className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(tempatIbadah.id_tempat_ibadah)}
-                        loading={deletingId === tempatIbadah.id_tempat_ibadah}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <DeleteButton 
+                        action={`/admin/api/tempat-ibadah/${tempatIbadah.id_tempat_ibadah}/delete`}
+                        confirmMessage="Apakah Anda yakin ingin menghapus tempat ibadah ini?"
+                      />
                     </div>
                   </td>
                 </tr>
@@ -228,7 +179,7 @@ export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) 
               Tidak ada data tempat ibadah
             </h3>
             <p className="text-gray-500">
-              {searchTerm
+              {search
                 ? 'Coba ubah filter pencarian Anda'
                 : 'Mulai dengan menambahkan tempat ibadah pertama'}
             </p>
@@ -241,30 +192,28 @@ export function TempatIbadahTable({ onEdit, onDelete }: TempatIbadahTableProps) 
         <div className="flex items-center justify-between bg-white px-4 py-3 border rounded-lg">
           <div className="flex items-center text-sm text-gray-700">
             <span>
-              Menampilkan {((currentPage - 1) * pageSize) + 1} sampai{' '}
-              {Math.min(currentPage * pageSize, totalItems)} dari {totalItems} item
+              Menampilkan {((page - 1) * limit) + 1} sampai{' '}
+              {Math.min(page * limit, totalItems)} dari {totalItems} item
             </span>
           </div>
           <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Sebelumnya
-            </Button>
+            {page > 1 && (
+              <Link href={`/admin/tempat-ibadah?page=${page - 1}&limit=${limit}&search=${search}`}>
+                <Button variant="outline" size="sm">
+                  Sebelumnya
+                </Button>
+              </Link>
+            )}
             <span className="flex items-center px-3 text-sm text-gray-700">
-              Halaman {currentPage} dari {totalPages}
+              Halaman {page} dari {totalPages}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Selanjutnya
-            </Button>
+            {page < totalPages && (
+              <Link href={`/admin/tempat-ibadah?page=${page + 1}&limit=${limit}&search=${search}`}>
+                <Button variant="outline" size="sm">
+                  Selanjutnya
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
