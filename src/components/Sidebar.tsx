@@ -17,11 +17,12 @@ import {
   X,
   LogOut
 } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from './Button';
+import LogoutButton from './LogoutButton';
 
 interface SidebarProps {
-  isOpen: boolean;
-  onToggle: () => void;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
 const iconMap = {
@@ -34,13 +35,8 @@ const iconMap = {
   ShoppingCart
 };
 
-export function Sidebar({ isOpen, onToggle }: SidebarProps) {
+export function Sidebar({ isOpen = true, onToggle = () => {} }: SidebarProps) {
   const pathname = usePathname();
-
-  const handleLogout = async () => {
-    // TODO: Implement logout logic
-    console.log('Logout clicked');
-  };
 
   return (
     <>
@@ -85,7 +81,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           <nav className="flex-1 space-y-1 px-4 py-6">
             {ADMIN_NAVIGATION.map((item) => {
               const Icon = iconMap[item.icon as keyof typeof iconMap];
-              const isActive = pathname === item.href;
+              const isActive = pathname.startsWith(item.href);
               
               return (
                 <Link
@@ -118,15 +114,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
           {/* Footer */}
           <div className="border-t p-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="w-full justify-start text-gray-700 hover:text-red-600"
-            >
-              <LogOut className="mr-3 h-5 w-5" />
-              Logout
-            </Button>
+            <LogoutButton />
           </div>
         </div>
       </div>

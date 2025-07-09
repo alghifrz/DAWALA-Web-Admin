@@ -4,9 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
-import { Button } from '../ui/Button';
 import { TempatIbadahFormData } from '@/lib/types/admin';
 import { getLokasiList } from '@/lib/api/kuliner'; // Reuse lokasi API
 
@@ -106,28 +103,55 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label="Nama Tempat Ibadah"
-          {...register('nama')}
-          error={errors.nama?.message}
-          placeholder="Masukkan nama tempat ibadah"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nama Tempat Ibadah
+          </label>
+          <input
+            type="text"
+            {...register('nama')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Masukkan nama tempat ibadah"
+          />
+          {errors.nama && (
+            <p className="mt-1 text-sm text-red-600">{errors.nama.message}</p>
+          )}
+        </div>
 
-        <Input
-          label="Jam Buka"
-          {...register('jam_buka')}
-          error={errors.jam_buka?.message}
-          placeholder="Contoh: 24 Jam / 05:00 - 22:00"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Jam Buka
+          </label>
+          <input
+            type="text"
+            {...register('jam_buka')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Contoh: 24 Jam / 05:00 - 22:00"
+          />
+          {errors.jam_buka && (
+            <p className="mt-1 text-sm text-red-600">{errors.jam_buka.message}</p>
+          )}
+        </div>
 
-        <Select
-          label="Lokasi"
-          options={lokasiOptions}
-          value={watch('id_alamat')}
-          onChange={(value) => setValue('id_alamat', value)}
-          error={errors.id_alamat?.message}
-          placeholder="Pilih lokasi"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Lokasi
+          </label>
+          <select
+            {...register('id_alamat')}
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Pilih lokasi</option>
+            {lokasiOptions.map((lokasi) => (
+              <option key={lokasi.value} value={lokasi.value}>
+                {lokasi.label}
+              </option>
+            ))}
+          </select>
+          {errors.id_alamat && (
+            <p className="mt-1 text-sm text-red-600">{errors.id_alamat.message}</p>
+          )}
+        </div>
       </div>
 
       <div>
@@ -156,16 +180,27 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
       </div>
 
       <div className="flex justify-end space-x-4">
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={() => window.history.back()}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Batal
-        </Button>
-        <Button type="submit" loading={loading}>
-          {initialData ? 'Update Tempat Ibadah' : 'Tambah Tempat Ibadah'}
-        </Button>
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Loading...
+            </div>
+          ) : (
+            initialData ? 'Update Tempat Ibadah' : 'Tambah Tempat Ibadah'
+          )}
+        </button>
       </div>
     </form>
   );

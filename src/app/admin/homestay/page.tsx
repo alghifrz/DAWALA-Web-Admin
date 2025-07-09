@@ -1,21 +1,19 @@
 import React from 'react';
-import { AdminLayout } from '@/components/admin/layout/AdminLayout';
+import { AdminLayout } from '@/components/AdminLayout';
+import { HomestayTable } from '@/components/admin/tables/HomestayTable';
 
-export default function HomestayPage() {
+interface HomestayPageProps {
+  searchParams?: {
+    page?: string;
+    limit?: string;
+    search?: string;
+  };
+}
+
+export default async function HomestayPage({ searchParams }: HomestayPageProps) {
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Homestay Ramah Muslim</h1>
-          <p className="text-gray-600">Kelola data homestay ramah muslim di Desa Wisata Alamendah</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg border">
-          <p className="text-gray-500 text-center py-8">
-            Implementasi tabel homestay akan ditambahkan di sini
-          </p>
-        </div>
-      </div>
+      <HomestayTable searchParams={searchParams} />
     </AdminLayout>
   );
 } 

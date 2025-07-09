@@ -1,21 +1,20 @@
 import React from 'react';
-import { AdminLayout } from '@/components/admin/layout/AdminLayout';
+import { AdminLayout } from '@/components/AdminLayout';
+import { PemesananTable } from '@/components/admin/tables/PemesananTable';
 
-export default function PemesananPage() {
+interface PemesananPageProps {
+  searchParams?: {
+    page?: string;
+    limit?: string;
+    search?: string;
+    status?: string;
+  };
+}
+
+export default async function PemesananPage({ searchParams }: PemesananPageProps) {
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pemesanan Paket Wisata</h1>
-          <p className="text-gray-600">Kelola semua pemesanan paket wisata oleh pengunjung</p>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg border">
-          <p className="text-gray-500 text-center py-8">
-            Implementasi tabel pemesanan akan ditambahkan di sini
-          </p>
-        </div>
-      </div>
+      <PemesananTable searchParams={searchParams} />
     </AdminLayout>
   );
 } 

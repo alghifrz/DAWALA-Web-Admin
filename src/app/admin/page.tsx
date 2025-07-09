@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth/admin-auth'
-import LogoutButton from './components/LogoutButton'
+import LogoutButton from '../../components/LogoutButton'
 
 export default async function AdminDashboard() {
   const user = await requireAdmin()
