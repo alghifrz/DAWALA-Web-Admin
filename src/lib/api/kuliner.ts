@@ -1,13 +1,27 @@
-import { Kuliner, KulinerFormData, ApiResponse, PaginatedResponse } from '../types/admin';
+import { Kuliner, Jenis, KulinerFormData } from '@/lib/types/admin';
 
-const API_BASE_URL = '/api/admin/kuliner';
+interface ApiResponse<T> {
+  success?: boolean;
+  data?: T;
+  error?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+}
 
 export async function getKulinerList(params?: {
   page?: number;
   limit?: number;
   search?: string;
   status?: string;
-}): Promise<PaginatedResponse<Kuliner>> {
+}): Promise<{
+  data: Kuliner[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
   const searchParams = new URLSearchParams();
   
   if (params?.page) searchParams.append('page', params.page.toString());
@@ -15,17 +29,24 @@ export async function getKulinerList(params?: {
   if (params?.search) searchParams.append('search', params.search);
   if (params?.status) searchParams.append('status', params.status);
 
-  const response = await fetch(`${API_BASE_URL}?${searchParams.toString()}`);
+  const response = await fetch(`/api/admin/kuliner?${searchParams.toString()}`);
   
   if (!response.ok) {
     throw new Error('Failed to fetch kuliner list');
   }
 
-  return response.json();
+  const result: ApiResponse<Kuliner[]> = await response.json();
+  return {
+    data: result.data!,
+    total: result.total!,
+    page: result.page!,
+    limit: result.limit!,
+    totalPages: result.totalPages!,
+  };
 }
 
 export async function getKulinerById(id: string): Promise<Kuliner> {
-  const response = await fetch(`${API_BASE_URL}/${id}`);
+  const response = await fetch(`/api/admin/kuliner/${id}`);
   
   if (!response.ok) {
     throw new Error('Failed to fetch kuliner');
@@ -36,7 +57,7 @@ export async function getKulinerById(id: string): Promise<Kuliner> {
 }
 
 export async function createKuliner(data: KulinerFormData): Promise<Kuliner> {
-  const response = await fetch(API_BASE_URL, {
+  const response = await fetch('/api/admin/kuliner', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -46,15 +67,15 @@ export async function createKuliner(data: KulinerFormData): Promise<Kuliner> {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to create kuliner');
+    throw new Error(error.error || 'Failed to create kuliner');
   }
 
   const result: ApiResponse<Kuliner> = await response.json();
   return result.data!;
 }
 
-export async function updateKuliner(id: string, data: Partial<KulinerFormData>): Promise<Kuliner> {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+export async function updateKuliner(id: string, data: KulinerFormData): Promise<Kuliner> {
+  const response = await fetch(`/api/admin/kuliner/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -64,7 +85,7 @@ export async function updateKuliner(id: string, data: Partial<KulinerFormData>):
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to update kuliner');
+    throw new Error(error.error || 'Failed to update kuliner');
   }
 
   const result: ApiResponse<Kuliner> = await response.json();
@@ -72,34 +93,23 @@ export async function updateKuliner(id: string, data: Partial<KulinerFormData>):
 }
 
 export async function deleteKuliner(id: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await fetch(`/api/admin/kuliner/${id}`, {
     method: 'DELETE',
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to delete kuliner');
+    throw new Error(error.error || 'Failed to delete kuliner');
   }
 }
 
-export async function getJenisList(): Promise<Array<{ id_jenis: string; nama: string }>> {
+export async function getJenisList(): Promise<Jenis[]> {
   const response = await fetch('/api/admin/jenis');
   
   if (!response.ok) {
     throw new Error('Failed to fetch jenis list');
   }
 
-  const result: ApiResponse<Array<{ id_jenis: string; nama: string }>> = await response.json();
-  return result.data!;
-}
-
-export async function getLokasiList(): Promise<Array<{ id_lokasi: string; nama: string }>> {
-  const response = await fetch('/api/admin/lokasi');
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch lokasi list');
-  }
-
-  const result: ApiResponse<Array<{ id_lokasi: string; nama: string }>> = await response.json();
+  const result: ApiResponse<Jenis[]> = await response.json();
   return result.data!;
 } 

@@ -33,8 +33,7 @@ export async function GET() {
       take: 5,
       orderBy: { created_at: 'desc' },
       include: {
-        jenis: true,
-        alamat: true
+        jenis: true
       }
     })
 
@@ -48,10 +47,7 @@ export async function GET() {
 
     const recentHomestay = await prisma.homestay.findMany({
       take: 5,
-      orderBy: { created_at: 'desc' },
-      include: {
-        alamat: true
-      }
+      orderBy: { created_at: 'desc' }
     })
 
     return NextResponse.json({
@@ -75,7 +71,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch dashboard statistics' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

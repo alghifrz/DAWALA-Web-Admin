@@ -1,29 +1,50 @@
-import { TempatIbadah, TempatIbadahFormData, ApiResponse, PaginatedResponse } from '../types/admin';
+import { TempatIbadah, TempatIbadahFormData } from '@/lib/types/admin';
 
-const API_BASE_URL = '/api/admin/tempat-ibadah';
+interface ApiResponse<T> {
+  success?: boolean;
+  data?: T;
+  error?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+}
 
 export async function getTempatIbadahList(params?: {
   page?: number;
   limit?: number;
   search?: string;
-}): Promise<PaginatedResponse<TempatIbadah>> {
+}): Promise<{
+  data: TempatIbadah[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
   const searchParams = new URLSearchParams();
   
   if (params?.page) searchParams.append('page', params.page.toString());
   if (params?.limit) searchParams.append('limit', params.limit.toString());
   if (params?.search) searchParams.append('search', params.search);
 
-  const response = await fetch(`${API_BASE_URL}?${searchParams.toString()}`);
+  const response = await fetch(`/api/admin/tempat-ibadah?${searchParams.toString()}`);
   
   if (!response.ok) {
     throw new Error('Failed to fetch tempat ibadah list');
   }
 
-  return response.json();
+  const result: ApiResponse<TempatIbadah[]> = await response.json();
+  return {
+    data: result.data!,
+    total: result.total!,
+    page: result.page!,
+    limit: result.limit!,
+    totalPages: result.totalPages!,
+  };
 }
 
 export async function getTempatIbadahById(id: string): Promise<TempatIbadah> {
-  const response = await fetch(`${API_BASE_URL}/${id}`);
+  const response = await fetch(`/api/admin/tempat-ibadah/${id}`);
   
   if (!response.ok) {
     throw new Error('Failed to fetch tempat ibadah');
@@ -34,7 +55,7 @@ export async function getTempatIbadahById(id: string): Promise<TempatIbadah> {
 }
 
 export async function createTempatIbadah(data: TempatIbadahFormData): Promise<TempatIbadah> {
-  const response = await fetch(API_BASE_URL, {
+  const response = await fetch('/api/admin/tempat-ibadah', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -44,15 +65,15 @@ export async function createTempatIbadah(data: TempatIbadahFormData): Promise<Te
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to create tempat ibadah');
+    throw new Error(error.error || 'Failed to create tempat ibadah');
   }
 
   const result: ApiResponse<TempatIbadah> = await response.json();
   return result.data!;
 }
 
-export async function updateTempatIbadah(id: string, data: Partial<TempatIbadahFormData>): Promise<TempatIbadah> {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+export async function updateTempatIbadah(id: string, data: TempatIbadahFormData): Promise<TempatIbadah> {
+  const response = await fetch(`/api/admin/tempat-ibadah/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -62,7 +83,7 @@ export async function updateTempatIbadah(id: string, data: Partial<TempatIbadahF
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to update tempat ibadah');
+    throw new Error(error.error || 'Failed to update tempat ibadah');
   }
 
   const result: ApiResponse<TempatIbadah> = await response.json();
@@ -70,12 +91,12 @@ export async function updateTempatIbadah(id: string, data: Partial<TempatIbadahF
 }
 
 export async function deleteTempatIbadah(id: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const response = await fetch(`/api/admin/tempat-ibadah/${id}`, {
     method: 'DELETE',
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'Failed to delete tempat ibadah');
+    throw new Error(error.error || 'Failed to delete tempat ibadah');
   }
 } 

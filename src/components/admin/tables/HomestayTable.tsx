@@ -1,24 +1,21 @@
-import React from 'react';
-import Link from 'next/link';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
-import { Input } from '@/components/Input';
+import { prisma } from '@/lib/prisma';
 import { Button } from '@/components/Button';
 import { DeleteButton } from '@/components/DeleteButton';
-import { prisma } from '@/lib/prisma';
-import { formatDate } from '@/lib/utils/helpers';
+import Link from 'next/link';
 
 interface HomestayTableProps {
-  searchParams?: {
+  searchParams?: Promise<{
     page?: string;
     limit?: string;
     search?: string;
-  };
+  }>;
 }
 
 export async function HomestayTable({ searchParams }: HomestayTableProps) {
-  const page = parseInt(searchParams?.page || '1');
-  const limit = parseInt(searchParams?.limit || '10');
-  const search = searchParams?.search || '';
+  const params = await searchParams;
+  const page = parseInt(params?.page || '1');
+  const limit = parseInt(params?.limit || '10');
+  const search = params?.search || '';
   
   const skip = (page - 1) * limit;
 
@@ -39,7 +36,6 @@ export async function HomestayTable({ searchParams }: HomestayTableProps) {
       take: limit,
       orderBy: { created_at: 'desc' },
       include: {
-        alamat: true,
         fasilitas_homestay: {
           include: {
             fasilitas_muslim: true,
@@ -53,183 +49,149 @@ export async function HomestayTable({ searchParams }: HomestayTableProps) {
   const totalPages = Math.ceil(totalItems / limit);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Homestay</h2>
-          <p className="text-gray-600">Kelola data homestay ramah muslim di Desa Wisata Alamendah</p>
-        </div>
-        <Link href="/admin/homestay/create">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Homestay
-          </Button>
-        </Link>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border">
-        <form className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              name="search"
-              placeholder="Cari homestay..."
-              defaultValue={search}
-              className="pl-10"
-            />
-          </div>
-          <select
-            name="limit"
-            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            defaultValue={limit.toString()}
-          >
-            <option value="10">10 item</option>
-            <option value="25">25 item</option>
-            <option value="50">50 item</option>
-          </select>
-          <Button type="submit" className="md:col-span-2">
-            Filter
-          </Button>
-        </form>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nama
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Harga
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Kontak
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fasilitas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Lokasi
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Dibuat
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {homestayList.map((homestay) => (
-                <tr key={homestay.id_homestay} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {homestay.nama}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {homestay.deskripsi?.substring(0, 50)}...
-                      </div>
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white border border-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Nama
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Harga
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Lokasi
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Kontak
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Fasilitas
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Aksi
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {homestayList.map((homestay) => (
+            <tr key={homestay.id_homestay} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <div className="h-10 w-10 flex-shrink-0">
+                    <img
+                      className="h-10 w-10 rounded-full object-cover"
+                      src={homestay.foto}
+                      alt={homestay.nama}
+                    />
+                  </div>
+                  <div className="ml-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {homestay.nama}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    Rp {homestay.harga?.toLocaleString() || '0'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {homestay.kontak}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="flex flex-wrap gap-1">
-                      {homestay.fasilitas_homestay.slice(0, 3).map((fasilitas, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                        >
-                          {fasilitas.fasilitas_muslim.nama}
-                        </span>
-                      ))}
-                      {homestay.fasilitas_homestay.length > 3 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{homestay.fasilitas_homestay.length - 3}
-                        </span>
-                      )}
+                    <div className="text-sm text-gray-500">
+                      {homestay.deskripsi.substring(0, 50)}...
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {homestay.alamat?.nama || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {formatDate(homestay.created_at)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      <Link href={`/admin/homestay/${homestay.id_homestay}`}>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <DeleteButton 
-                        action={`/admin/api/homestay/${homestay.id_homestay}/delete`}
-                        confirmMessage="Apakah Anda yakin ingin menghapus homestay ini?"
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Empty state */}
-        {homestayList.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Search className="h-12 w-12 mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Tidak ada data homestay
-            </h3>
-            <p className="text-gray-500">
-              {search
-                ? 'Coba ubah filter pencarian Anda'
-                : 'Mulai dengan menambahkan homestay pertama'}
-            </p>
-          </div>
-        )}
-      </div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                Rp {homestay.harga.toLocaleString()}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {homestay.lokasi}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {homestay.kontak}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <div className="flex flex-wrap gap-1">
+                  {homestay.fasilitas_homestay?.map((fasilitas, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+                    >
+                      {fasilitas.fasilitas_muslim?.nama}
+                    </span>
+                  ))}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div className="flex space-x-2">
+                  <Link href={`/admin/homestay/${homestay.id_homestay}`}>
+                    <Button size="sm" variant="outline">
+                      Edit
+                    </Button>
+                  </Link>
+                  <DeleteButton
+                    action={`/api/admin/homestay/${homestay.id_homestay}/delete`}
+                    confirmMessage="Apakah Anda yakin ingin menghapus homestay ini?"
+                  />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between bg-white px-4 py-3 border rounded-lg">
-          <div className="flex items-center text-sm text-gray-700">
-            <span>
-              Menampilkan {((page - 1) * limit) + 1} sampai{' '}
-              {Math.min(page * limit, totalItems)} dari {totalItems} item
-            </span>
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <Link
+              href={`/admin/homestay?page=${page - 1}&limit=${limit}&search=${search}`}
+              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                page <= 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Previous
+            </Link>
+            <Link
+              href={`/admin/homestay?page=${page + 1}&limit=${limit}&search=${search}`}
+              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                page >= totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Next
+            </Link>
           </div>
-          <div className="flex space-x-2">
-            {page > 1 && (
-              <Link href={`/admin/homestay?page=${page - 1}&limit=${limit}&search=${search}`}>
-                <Button variant="outline" size="sm">
-                  Sebelumnya
-                </Button>
-              </Link>
-            )}
-            <span className="flex items-center px-3 text-sm text-gray-700">
-              Halaman {page} dari {totalPages}
-            </span>
-            {page < totalPages && (
-              <Link href={`/admin/homestay?page=${page + 1}&limit=${limit}&search=${search}`}>
-                <Button variant="outline" size="sm">
-                  Selanjutnya
-                </Button>
-              </Link>
-            )}
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-700">
+                Showing{' '}
+                <span className="font-medium">{skip + 1}</span> to{' '}
+                <span className="font-medium">
+                  {Math.min(skip + limit, totalItems)}
+                </span>{' '}
+                of <span className="font-medium">{totalItems}</span> results
+              </p>
+            </div>
+            <div>
+              <nav
+                className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => (
+                    <Link
+                      key={pageNum}
+                      href={`/admin/homestay?page=${pageNum}&limit=${limit}&search=${search}`}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        pageNum === page
+                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </Link>
+                  )
+                )}
+              </nav>
+            </div>
           </div>
         </div>
       )}

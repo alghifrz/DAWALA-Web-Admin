@@ -36,33 +36,19 @@ model Jenis {
   @@map("jenis")
 }
 
-model Lokasi {
-  id_lokasi     String          @id @default(uuid()) @map("id_lokasi")
-  nama          String
-  latitude      Float
-  longitude     Float
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @updatedAt
-  homestay      Homestay[]
-  kuliner       Kuliner[]
-  tempat_ibadah Tempat_Ibadah[]
-
-  @@map("lokasi")
-}
-
 model Kuliner {
-  id_kuliner String        @id @default(uuid()) @map("id_kuliner")
-  nama       String
-  deskripsi  String
-  status     StatusKuliner
-  jam_buka   String
-  foto       String
-  id_jenis   String        @map("id_jenis")
-  id_alamat  String        @map("id_alamat")
-  created_at DateTime      @default(now())
-  updated_at DateTime      @updatedAt
-  alamat     Lokasi        @relation(fields: [id_alamat], references: [id_lokasi], onDelete: Cascade)
-  jenis      Jenis         @relation(fields: [id_jenis], references: [id_jenis], onDelete: Cascade)
+  id_kuliner      String        @id @default(uuid()) @map("id_kuliner")
+  nama            String
+  deskripsi       String
+  status          StatusKuliner
+  jam_buka        String
+  foto            String[]
+  lokasi          String
+  google_maps_url String?
+  id_jenis        String        @map("id_jenis")
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  jenis           Jenis         @relation(fields: [id_jenis], references: [id_jenis], onDelete: Cascade)
 
   @@map("kuliner")
 }
@@ -72,10 +58,9 @@ model Tempat_Ibadah {
   nama             String
   jam_buka         String
   fasilitas        String[]
-  id_alamat        String   @map("id_alamat")
+  lokasi           String
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
-  alamat           Lokasi   @relation(fields: [id_alamat], references: [id_lokasi], onDelete: Cascade)
 
   @@map("tempat_ibadah")
 }
@@ -87,11 +72,10 @@ model Homestay {
   harga              Int
   kontak             String
   foto               String
-  id_alamat          String               @map("id_alamat")
+  lokasi             String
   created_at         DateTime             @default(now())
   updated_at         DateTime             @updatedAt
   fasilitas_homestay Fasilitas_Homestay[]
-  alamat             Lokasi               @relation(fields: [id_alamat], references: [id_lokasi], onDelete: Cascade)
 
   @@map("homestay")
 }

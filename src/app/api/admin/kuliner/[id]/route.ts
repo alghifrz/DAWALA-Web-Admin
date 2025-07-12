@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createPrismaClient, withRetry } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const prisma = createPrismaClient();
   try {
-    const kuliner = await prisma.kuliner.findUnique({
+    const kuliner = await withRetry(() => prisma.kuliner.findUnique({
       where: { id_kuliner: params.id },
       include: {
-        alamat: true,
         jenis: true,
       },
-    });
+    }));
 
     if (!kuliner) {
       return NextResponse.json(
-        { error: 'Kuliner tidak ditemukan' },
+        { success: false, error: 'Kuliner tidak ditemukan' },
         { status: 404 }
       );
     }
@@ -28,9 +28,11 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching kuliner:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -38,40 +40,56 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const prisma = createPrismaClient();
   try {
     const body = await request.json();
-    
-    const { nama, deskripsi, status, jam_buka, foto, id_jenis, id_alamat } = body;
+    const { nama, deskripsi, status, jam_buka, foto, id_jenis, lokasi, google_maps_url } = body;
+
+    // Validate required fields
+    if (!nama || !deskripsi || !status || !jam_buka || !foto || !id_jenis || !lokasi) {
+      return NextResponse.json(
+        { success: false, error: 'Semua field harus diisi' },
+        { status: 400 }
+      );
+    }
+
+    // Validate foto is an array
+    if (!Array.isArray(foto) || foto.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Minimal satu foto harus diupload' },
+        { status: 400 }
+      );
+    }
 
     // Check if kuliner exists
-    const existingKuliner = await prisma.kuliner.findUnique({
+    const existingKuliner = await withRetry(() => prisma.kuliner.findUnique({
       where: { id_kuliner: params.id },
-    });
+    }));
 
     if (!existingKuliner) {
       return NextResponse.json(
-        { error: 'Kuliner tidak ditemukan' },
+        { success: false, error: 'Kuliner tidak ditemukan' },
         { status: 404 }
       );
     }
 
     // Update kuliner
-    const kuliner = await prisma.kuliner.update({
+    const kuliner = await withRetry(() => prisma.kuliner.update({
       where: { id_kuliner: params.id },
       data: {
-        ...(nama && { nama }),
-        ...(deskripsi && { deskripsi }),
-        ...(status && { status }),
-        ...(jam_buka && { jam_buka }),
-        ...(foto && { foto }),
-        ...(id_jenis && { id_jenis }),
-        ...(id_alamat && { id_alamat }),
+        nama,
+        deskripsi,
+        status,
+        jam_buka,
+        foto,
+        id_jenis,
+        lokasi,
+        google_maps_url: google_maps_url || null,
       },
       include: {
-        alamat: true,
         jenis: true,
       },
-    });
+    }));
 
     return NextResponse.json({
       success: true,
@@ -81,9 +99,11 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating kuliner:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -91,23 +111,24 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const prisma = createPrismaClient();
   try {
     // Check if kuliner exists
-    const existingKuliner = await prisma.kuliner.findUnique({
+    const existingKuliner = await withRetry(() => prisma.kuliner.findUnique({
       where: { id_kuliner: params.id },
-    });
+    }));
 
     if (!existingKuliner) {
       return NextResponse.json(
-        { error: 'Kuliner tidak ditemukan' },
+        { success: false, error: 'Kuliner tidak ditemukan' },
         { status: 404 }
       );
     }
 
     // Delete kuliner
-    await prisma.kuliner.delete({
+    await withRetry(() => prisma.kuliner.delete({
       where: { id_kuliner: params.id },
-    });
+    }));
 
     return NextResponse.json({
       success: true,
@@ -116,8 +137,10 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting kuliner:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 } 
