@@ -8,9 +8,6 @@ export async function GET(
   try {
     const tempatIbadah = await prisma.tempat_Ibadah.findUnique({
       where: { id_tempat_ibadah: params.id },
-      include: {
-        alamat: true,
-      },
     });
 
     if (!tempatIbadah) {
@@ -39,18 +36,13 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    
-    const { nama, jam_buka, fasilitas, id_alamat } = body;
+    const { nama, jam_buka, fasilitas, lokasi } = body;
 
-    // Check if tempat ibadah exists
-    const existingTempatIbadah = await prisma.tempat_Ibadah.findUnique({
-      where: { id_tempat_ibadah: params.id },
-    });
-
-    if (!existingTempatIbadah) {
+    // Validate required fields
+    if (!nama || !jam_buka || !fasilitas || !lokasi) {
       return NextResponse.json(
-        { error: 'Tempat ibadah tidak ditemukan' },
-        { status: 404 }
+        { error: 'Semua field harus diisi' },
+        { status: 400 }
       );
     }
 
@@ -58,20 +50,16 @@ export async function PUT(
     const tempatIbadah = await prisma.tempat_Ibadah.update({
       where: { id_tempat_ibadah: params.id },
       data: {
-        ...(nama && { nama }),
-        ...(jam_buka && { jam_buka }),
-        ...(fasilitas && { fasilitas }),
-        ...(id_alamat && { id_alamat }),
-      },
-      include: {
-        alamat: true,
+        nama,
+        jam_buka,
+        fasilitas,
+        lokasi,
       },
     });
 
     return NextResponse.json({
       success: true,
       data: tempatIbadah,
-      message: 'Tempat ibadah berhasil diupdate',
     });
   } catch (error) {
     console.error('Error updating tempat ibadah:', error);

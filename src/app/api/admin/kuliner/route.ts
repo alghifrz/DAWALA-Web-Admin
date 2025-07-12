@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { createPrismaClient, withRetry } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
+  const prisma = createPrismaClient();
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -26,19 +27,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get total count
-    const total = await prisma.kuliner.count({ where });
+    const total = await withRetry(() => prisma.kuliner.count({ where }));
 
     // Get data with relations
-    const kulinerList = await prisma.kuliner.findMany({
+    const kulinerList = await withRetry(() => prisma.kuliner.findMany({
       where,
       include: {
-        alamat: true,
         jenis: true,
       },
       skip,
       take: limit,
       orderBy: { created_at: 'desc' },
-    });
+    }));
 
     const totalPages = Math.ceil(total / limit);
 
@@ -55,25 +55,35 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 export async function POST(request: NextRequest) {
+  const prisma = createPrismaClient();
   try {
     const body = await request.json();
-    
-    const { nama, deskripsi, status, jam_buka, foto, id_jenis, id_alamat } = body;
+    const { nama, deskripsi, status, jam_buka, foto, id_jenis, lokasi, google_maps_url } = body;
 
     // Validate required fields
-    if (!nama || !deskripsi || !status || !jam_buka || !foto || !id_jenis || !id_alamat) {
+    if (!nama || !deskripsi || !status || !jam_buka || !foto || !id_jenis || !lokasi) {
       return NextResponse.json(
-        { error: 'Semua field harus diisi' },
+        { success: false, error: 'Semua field harus diisi' },
         { status: 400 }
       );
     }
 
-    // Create kuliner
-    const kuliner = await prisma.kuliner.create({
+    // Validate foto is an array
+    if (!Array.isArray(foto) || foto.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Minimal satu foto harus diupload' },
+        { status: 400 }
+      );
+    }
+
+    // Create new kuliner
+    const kuliner = await withRetry(() => prisma.kuliner.create({
       data: {
         nama,
         deskripsi,
@@ -81,24 +91,26 @@ export async function POST(request: NextRequest) {
         jam_buka,
         foto,
         id_jenis,
-        id_alamat,
+        lokasi,
+        google_maps_url: google_maps_url || null,
       },
       include: {
-        alamat: true,
         jenis: true,
       },
-    });
+    }));
 
     return NextResponse.json({
       success: true,
       data: kuliner,
-      message: 'Kuliner berhasil dibuat',
+      message: 'Kuliner berhasil ditambahkan',
     });
   } catch (error) {
     console.error('Error creating kuliner:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 } 

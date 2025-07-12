@@ -25,9 +25,6 @@ export async function GET(request: NextRequest) {
     // Get data with relations
     const tempatIbadahList = await prisma.tempat_Ibadah.findMany({
       where,
-      include: {
-        alamat: true,
-      },
       skip,
       take: limit,
       orderBy: { created_at: 'desc' },
@@ -54,34 +51,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    const { nama, jam_buka, fasilitas, id_alamat } = body;
+    const { nama, jam_buka, fasilitas, lokasi } = body;
 
     // Validate required fields
-    if (!nama || !jam_buka || !fasilitas || !id_alamat) {
+    if (!nama || !jam_buka || !fasilitas || !lokasi) {
       return NextResponse.json(
         { error: 'Semua field harus diisi' },
         { status: 400 }
       );
     }
 
-    // Create tempat ibadah
+    // Create new tempat ibadah
     const tempatIbadah = await prisma.tempat_Ibadah.create({
       data: {
         nama,
         jam_buka,
         fasilitas,
-        id_alamat,
-      },
-      include: {
-        alamat: true,
+        lokasi,
       },
     });
 
     return NextResponse.json({
       success: true,
       data: tempatIbadah,
-      message: 'Tempat ibadah berhasil dibuat',
     });
   } catch (error) {
     console.error('Error creating tempat ibadah:', error);

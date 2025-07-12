@@ -5,13 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { TempatIbadahFormData } from '@/lib/types/admin';
-import { getLokasiList } from '@/lib/api/kuliner'; // Reuse lokasi API
 
 const tempatIbadahSchema = z.object({
   nama: z.string().min(1, 'Nama tempat ibadah harus diisi'),
   jam_buka: z.string().min(1, 'Jam buka harus diisi'),
   fasilitas: z.array(z.string()).min(1, 'Minimal satu fasilitas harus dipilih'),
-  id_alamat: z.string().min(1, 'Lokasi harus dipilih'),
+  lokasi: z.string().min(1, 'Lokasi harus diisi'),
 });
 
 interface TempatIbadahFormProps {
@@ -32,8 +31,6 @@ const FASILITAS_OPTIONS = [
 ];
 
 export function TempatIbadahForm({ initialData, onSubmit, loading = false }: TempatIbadahFormProps) {
-  const [lokasiOptions, setLokasiOptions] = useState<Array<{ value: string; label: string }>>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [selectedFasilitas, setSelectedFasilitas] = useState<string[]>(initialData?.fasilitas || []);
 
   const {
@@ -48,29 +45,9 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
       nama: '',
       jam_buka: '',
       fasilitas: [],
-      id_alamat: '',
+      lokasi: '',
     },
   });
-
-  useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        const lokasiList = await getLokasiList();
-        setLokasiOptions(
-          lokasiList.map((lokasi) => ({
-            value: lokasi.id_lokasi,
-            label: lokasi.nama,
-          }))
-        );
-      } catch (error) {
-        console.error('Error loading options:', error);
-      } finally {
-        setIsLoadingOptions(false);
-      }
-    };
-
-    loadOptions();
-  }, []);
 
   const handleFasilitasChange = (fasilitas: string) => {
     const newFasilitas = selectedFasilitas.includes(fasilitas)
@@ -89,17 +66,6 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
     }
   };
 
-  if (isLoadingOptions) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Memuat data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -108,8 +74,8 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
             Nama Tempat Ibadah
           </label>
           <input
-            type="text"
             {...register('nama')}
+            type="text"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Masukkan nama tempat ibadah"
           />
@@ -123,10 +89,10 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
             Jam Buka
           </label>
           <input
-            type="text"
             {...register('jam_buka')}
+            type="text"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Contoh: 24 Jam / 05:00 - 22:00"
+            placeholder="Contoh: 24 Jam"
           />
           {errors.jam_buka && (
             <p className="mt-1 text-sm text-red-600">{errors.jam_buka.message}</p>
@@ -137,19 +103,14 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Lokasi
           </label>
-          <select
-            {...register('id_alamat')}
+          <input
+            {...register('lokasi')}
+            type="text"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Pilih lokasi</option>
-            {lokasiOptions.map((lokasi) => (
-              <option key={lokasi.value} value={lokasi.value}>
-                {lokasi.label}
-              </option>
-            ))}
-          </select>
-          {errors.id_alamat && (
-            <p className="mt-1 text-sm text-red-600">{errors.id_alamat.message}</p>
+            placeholder="Masukkan alamat lokasi"
+          />
+          {errors.lokasi && (
+            <p className="mt-1 text-sm text-red-600">{errors.lokasi.message}</p>
           )}
         </div>
       </div>
@@ -179,27 +140,20 @@ export function TempatIbadahForm({ initialData, onSubmit, loading = false }: Tem
         )}
       </div>
 
-      <div className="flex justify-end space-x-4">
+      <div className="flex justify-end space-x-3">
         <button
           type="button"
           onClick={() => window.history.back()}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           Batal
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? (
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Loading...
-            </div>
-          ) : (
-            initialData ? 'Update Tempat Ibadah' : 'Tambah Tempat Ibadah'
-          )}
+          {loading ? 'Menyimpan...' : 'Simpan'}
         </button>
       </div>
     </form>

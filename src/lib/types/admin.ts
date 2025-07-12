@@ -5,18 +5,25 @@ export interface AdminUser {
   created_at: string;
 }
 
+export interface Jenis {
+  id_jenis: string;
+  nama: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Kuliner {
   id_kuliner: string;
   nama: string;
   deskripsi: string;
   status: 'halal' | 'haram';
   jam_buka: string;
-  foto: string;
+  foto: string[];
+  lokasi: string;
+  google_maps_url?: string;
   id_jenis: string;
-  id_alamat: string;
   created_at: string;
   updated_at: string;
-  alamat?: Lokasi;
   jenis?: Jenis;
 }
 
@@ -25,10 +32,9 @@ export interface TempatIbadah {
   nama: string;
   jam_buka: string;
   fasilitas: string[];
-  id_alamat: string;
+  lokasi: string;
   created_at: string;
   updated_at: string;
-  alamat?: Lokasi;
 }
 
 export interface Homestay {
@@ -38,10 +44,9 @@ export interface Homestay {
   harga: number;
   kontak: string;
   foto: string;
-  id_alamat: string;
+  lokasi: string;
   created_at: string;
   updated_at: string;
-  alamat?: Lokasi;
   fasilitas_homestay?: FasilitasHomestay[];
 }
 
@@ -79,22 +84,6 @@ export interface Pemesanan {
   paket_wisata?: PaketWisata;
 }
 
-export interface Lokasi {
-  id_lokasi: string;
-  nama: string;
-  latitude: number;
-  longitude: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Jenis {
-  id_jenis: string;
-  nama: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface FasilitasMuslim {
   id_fasilitas_muslim: string;
   nama: string;
@@ -108,24 +97,26 @@ export interface FasilitasHomestay {
   id_fasilitas_muslim: string;
   created_at: string;
   fasilitas_muslim?: FasilitasMuslim;
+  homestay?: Homestay;
 }
 
-// Form types
+// Form data interfaces
 export interface KulinerFormData {
   nama: string;
   deskripsi: string;
   status: 'halal' | 'haram';
   jam_buka: string;
-  foto: string;
+  foto: string[];
+  lokasi: string;
+  google_maps_url?: string;
   id_jenis: string;
-  id_alamat: string;
 }
 
 export interface TempatIbadahFormData {
   nama: string;
   jam_buka: string;
   fasilitas: string[];
-  id_alamat: string;
+  lokasi: string;
 }
 
 export interface HomestayFormData {
@@ -134,8 +125,7 @@ export interface HomestayFormData {
   harga: number;
   kontak: string;
   foto: string;
-  id_alamat: string;
-  fasilitas_muslim_ids: string[];
+  lokasi: string;
 }
 
 export interface PaketWisataFormData {
@@ -148,12 +138,15 @@ export interface PaketWisataFormData {
   foto: string;
 }
 
-export interface RantaiPasokFormData {
+export interface RantaiPasokHijauFormData {
   konten: string;
   id_paket_wisata: string;
 }
 
-export interface PemesananUpdateData {
+export interface PemesananFormData {
+  id_paket_wisata: string;
+  user_id: string;
+  tanggal_pemesanan: string;
   status_pemesanan: 'pending' | 'confirmed' | 'cancelled';
   catatan_opsional?: string;
 }
