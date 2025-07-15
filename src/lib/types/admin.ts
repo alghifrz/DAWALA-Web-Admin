@@ -27,14 +27,29 @@ export interface Kuliner {
   jenis?: Jenis;
 }
 
+export interface FasilitasTempatIbadah {
+  id_fasilitas_tempat_ibadah: string;
+  nama: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TempatIbadah {
   id_tempat_ibadah: string;
   nama: string;
   jam_buka: string;
-  fasilitas: string[];
   lokasi: string;
+  url_lokasi?: string;
   created_at: string;
   updated_at: string;
+  tempat_ibadah_fasilitas?: TempatIbadahFasilitas[];
+}
+
+export interface TempatIbadahFasilitas {
+  id_tempat_ibadah: string;
+  id_fasilitas_tempat_ibadah: string;
+  created_at: string;
+  fasilitas_tempat_ibadah?: FasilitasTempatIbadah;
 }
 
 export interface Homestay {
@@ -117,6 +132,7 @@ export interface TempatIbadahFormData {
   jam_buka: string;
   fasilitas: string[];
   lokasi: string;
+  url_lokasi?: string;
 }
 
 export interface HomestayFormData {

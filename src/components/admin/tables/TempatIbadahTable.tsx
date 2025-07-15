@@ -24,7 +24,6 @@ export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps
   if (search) {
     where.OR = [
       { nama: { contains: search, mode: 'insensitive' } },
-      { deskripsi: { contains: search, mode: 'insensitive' } },
     ];
   }
 
@@ -35,6 +34,13 @@ export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps
       skip,
       take: limit,
       orderBy: { created_at: 'desc' },
+      include: {
+        tempat_ibadah_fasilitas: {
+          include: {
+            fasilitas_tempat_ibadah: true,
+          },
+        },
+      },
     }).catch(() => []),
     prisma.tempat_Ibadah.count({ where }).catch(() => 0),
   ]);
@@ -42,7 +48,51 @@ export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps
   const totalPages = Math.ceil(totalItems / limit);
 
   return (
-    <div className="overflow-x-auto">
+    <div>
+      {/* Header */}
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tempat Ibadah</h1>
+          <p className="text-gray-600">Kelola data tempat ibadah</p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/admin/fasilitas-tempat-ibadah">
+            <Button variant="outline">
+              Kelola Fasilitas
+            </Button>
+          </Link>
+          <Link href="/admin/tempat-ibadah/create">
+            <Button>
+              Tambah Tempat Ibadah
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <form method="GET" className="flex gap-2">
+          <input
+            type="text"
+            name="search"
+            placeholder="Cari tempat ibadah..."
+            defaultValue={search}
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <Button type="submit" variant="outline">
+            Cari
+          </Button>
+          {search && (
+            <Link href="/admin/tempat-ibadah">
+              <Button type="button" variant="outline">
+                Reset
+              </Button>
+            </Link>
+          )}
+        </form>
+      </div>
+
+      <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-200">
         <thead className="bg-gray-50">
           <tr>
@@ -54,6 +104,9 @@ export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Lokasi
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              URL Lokasi
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Fasilitas
@@ -78,13 +131,27 @@ export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps
                 {tempatIbadah.lokasi}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {tempatIbadah.url_lokasi ? (
+                  <a
+                    href={tempatIbadah.url_lokasi}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Lihat Lokasi
+                  </a>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 <div className="flex flex-wrap gap-1">
-                  {tempatIbadah.fasilitas.map((fasilitas, index) => (
+                  {tempatIbadah.tempat_ibadah_fasilitas.map((fasilitas, index) => (
                     <span
                       key={index}
                       className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
                     >
-                      {fasilitas}
+                      {fasilitas.fasilitas_tempat_ibadah.nama}
                     </span>
                   ))}
                 </div>
@@ -168,6 +235,7 @@ export async function TempatIbadahTable({ searchParams }: TempatIbadahTableProps
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 } 

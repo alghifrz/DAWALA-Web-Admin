@@ -18,6 +18,12 @@ export const ADMIN_NAVIGATION = [
     description: 'Kelola tempat ibadah'
   },
   {
+    title: 'Fasilitas Tempat Ibadah',
+    href: '/admin/fasilitas-tempat-ibadah',
+    icon: 'Building',
+    description: 'Kelola fasilitas tempat ibadah'
+  },
+  {
     title: 'Homestay',
     href: '/admin/homestay',
     icon: 'Home',
