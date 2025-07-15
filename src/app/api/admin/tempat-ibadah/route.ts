@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { nama, jam_buka, fasilitas, lokasi } = body;
+    const { nama, jam_buka, fasilitas, lokasi, url_lokasi } = body;
 
     // Validate required fields
     if (!nama || !jam_buka || !fasilitas || !lokasi) {
@@ -61,13 +61,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new tempat ibadah
+    // Create new tempat ibadah with fasilitas
     const tempatIbadah = await prisma.tempat_Ibadah.create({
       data: {
         nama,
         jam_buka,
-        fasilitas,
         lokasi,
+        url_lokasi,
+        tempat_ibadah_fasilitas: {
+          create: fasilitas.map((fasilitasId: string) => ({
+            id_fasilitas_tempat_ibadah: fasilitasId,
+          })),
+        },
+      },
+      include: {
+        tempat_ibadah_fasilitas: {
+          include: {
+            fasilitas_tempat_ibadah: true,
+          },
+        },
       },
     });
 

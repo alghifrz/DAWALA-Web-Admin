@@ -42,27 +42,49 @@ model Kuliner {
   deskripsi       String
   status          StatusKuliner
   jam_buka        String
-  foto            String[]
-  lokasi          String
-  google_maps_url String?
   id_jenis        String        @map("id_jenis")
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
+  lokasi          String
+  foto            String[]
+  google_maps_url String?
   jenis           Jenis         @relation(fields: [id_jenis], references: [id_jenis], onDelete: Cascade)
 
   @@map("kuliner")
 }
 
+model Fasilitas_Tempat_Ibadah {
+  id_fasilitas_tempat_ibadah String                    @id @default(uuid()) @map("id_fasilitas_tempat_ibadah")
+  nama                       String
+  created_at                 DateTime                  @default(now())
+  updated_at                 DateTime                  @updatedAt
+  tempat_ibadah_fasilitas    Tempat_Ibadah_Fasilitas[]
+
+  @@map("fasilitas_tempat_ibadah")
+}
+
 model Tempat_Ibadah {
-  id_tempat_ibadah String   @id @default(uuid()) @map("id_tempat_ibadah")
-  nama             String
-  jam_buka         String
-  fasilitas        String[]
-  lokasi           String
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id_tempat_ibadah        String                    @id @default(uuid()) @map("id_tempat_ibadah")
+  nama                    String
+  jam_buka                String
+  created_at              DateTime                  @default(now())
+  updated_at              DateTime                  @updatedAt
+  lokasi                  String
+  url_lokasi              String?
+  tempat_ibadah_fasilitas Tempat_Ibadah_Fasilitas[]
 
   @@map("tempat_ibadah")
+}
+
+model Tempat_Ibadah_Fasilitas {
+  id_tempat_ibadah           String                  @map("id_tempat_ibadah")
+  id_fasilitas_tempat_ibadah String                  @map("id_fasilitas_tempat_ibadah")
+  created_at                 DateTime                @default(now())
+  fasilitas_tempat_ibadah    Fasilitas_Tempat_Ibadah @relation(fields: [id_fasilitas_tempat_ibadah], references: [id_fasilitas_tempat_ibadah], onDelete: Cascade)
+  tempat_ibadah              Tempat_Ibadah           @relation(fields: [id_tempat_ibadah], references: [id_tempat_ibadah], onDelete: Cascade)
+
+  @@id([id_tempat_ibadah, id_fasilitas_tempat_ibadah])
+  @@map("tempat_ibadah_fasilitas")
 }
 
 model Homestay {
@@ -72,9 +94,9 @@ model Homestay {
   harga              Int
   kontak             String
   foto               String
-  lokasi             String
   created_at         DateTime             @default(now())
   updated_at         DateTime             @updatedAt
+  lokasi             String
   fasilitas_homestay Fasilitas_Homestay[]
 
   @@map("homestay")
